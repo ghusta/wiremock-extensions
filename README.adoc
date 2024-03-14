@@ -1,0 +1,12 @@
+= WireMock Extensions
+:toc:
+
+== Overview
+
+Some WireMock Extensions to use with https://wiremock.org/[WireMock].
+
+== References
+
+* WireMock documentation
+** https://wiremock.org/docs/extending-wiremock/[Extending WireMock]
+** https://wiremock.org/docs/standalone/docker/#running-with-extensions[Configuration with a Docker container]
