@@ -16,6 +16,7 @@ import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.havingExactly;
+import static com.github.tomakehurst.wiremock.client.WireMock.matching;
 
 /**
  * Stub with query parameters split from request url.
@@ -25,6 +26,15 @@ import static com.github.tomakehurst.wiremock.client.WireMock.havingExactly;
  * Will use {@code request.queryParameters...hasExactly} if multiple values for a query parameter.
  */
 public class SplitPathAndQueryParamsStubMappingTransformer extends StubMappingTransformer {
+
+    private boolean parametersMatchAnything = false;
+
+    public SplitPathAndQueryParamsStubMappingTransformer() {
+    }
+
+    public SplitPathAndQueryParamsStubMappingTransformer(boolean parametersMatchAnything) {
+        this.parametersMatchAnything = parametersMatchAnything;
+    }
 
     @Override
     public StubMapping transform(StubMapping stubMapping, FileSource files, Parameters parameters) {
@@ -36,14 +46,18 @@ public class SplitPathAndQueryParamsStubMappingTransformer extends StubMappingTr
 
         queryParameterMap.forEach((key, queryParameter) ->
                 {
-                    if (queryParameter.isSingleValued()) {
-                        mappingBuilder.withQueryParam(key, equalTo(queryParameter.firstValue()));
+                    if (parametersMatchAnything) {
+                        mappingBuilder.withQueryParam(key, matching("^(.*)$"));
                     } else {
-                        // https://wiremock.org/docs/request-matching/#matching-headerquery-parameter-containing-multiple-values
-                        MultiValuePattern havingExactly = havingExactly(queryParameter.values().stream()
-                                .map(WireMock::equalTo)
-                                .toArray(StringValuePattern[]::new));
-                        mappingBuilder.withQueryParam(key, havingExactly);
+                        if (queryParameter.isSingleValued()) {
+                            mappingBuilder.withQueryParam(key, equalTo(queryParameter.firstValue()));
+                        } else {
+                            // https://wiremock.org/docs/request-matching/#matching-headerquery-parameter-containing-multiple-values
+                            MultiValuePattern havingExactly = havingExactly(queryParameter.values().stream()
+                                    .map(WireMock::equalTo)
+                                    .toArray(StringValuePattern[]::new));
+                            mappingBuilder.withQueryParam(key, havingExactly);
+                        }
                     }
                 }
         );
